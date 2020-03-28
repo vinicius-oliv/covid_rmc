@@ -1,0 +1,207 @@
+---
+title: "Covid-19 RMC"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(warning=F)
+knitr::opts_chunk$set(message=F)
+knitr::opts_chunk$set(results='hide')
+
+library(flexdashboard)
+library(shiny)
+library(geobr)
+library(tidyverse)
+library(rvest)
+library(httr)
+library(lubridate)
+```
+
+```{r}
+casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
+```
+
+
+```{r, cache=T}
+rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
+
+#
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank())
+```
+```{r}
+add_casos <- function(cidades, quant){
+  quant <- as.vector(quant)
+  cidades <- as.vector(cidades)
+  
+  casos <- numeric(20)
+  rmc <- as.character(rmc$name_muni)
+  
+  for(i in 1:length(cidades)){
+    for(j in 1:length(rmc)){
+      if(cidades[i] == rmc[j]){
+        casos[j] <- quant[i]
+      }
+    }
+  }
+  return(casos)
+}
+
+#Funçao de calculo do total de casos
+calc_total <- function(novo){
+  return(novo + casos$Total[(nrow(casos) - 19): nrow(casos)])
+}
+
+meses <- c("marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
+
+calc_novos <- function(atual, dia, mes){
+    dia_ant = as.integer(dia) - 1
+    mes <- ifelse(dia_ant == 0, 
+                  as.integer(mes) - 1, 
+                  as.integer(mes)
+                  )
+    
+    if(mes < 10){
+      mes = paste0("0", mes)
+    }
+    
+    if(dia_ant == 0 & as.integer(mes) %in% c(1, 3, 5, 6, 8, 10)){
+      dia_ant = "31"
+    }else if(dia_ant == 0){
+      dia_ant = "30"
+    }else{
+    }
+  
+    ant <- casos %>% 
+               filter(Data == dmy(as.integer(paste0(dia_ant, mes, "2020")))) %>% 
+               select(Total)
+    
+    return(atual - ant[["Total"]])                            
+}
+```
+
+
+```{r}
+data <- as.character(Sys.Date())
+mes <- str_split(data, "-")[[1]][2]
+dia <- str_split(data, "-")[[1]][3]
+
+Mes <- meses[as.integer(mes) - 2]
+
+url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-",dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
+
+texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
+
+for(i in length(texto)){
+  if(str_detect(texto[i], "Campinas - ") == T){
+    texto <- texto[i]
+  }
+}
+
+cidades <- str_remove_all(texto, "-.?[[:digit:]]+")
+cidades <- str_split(cidades, pattern = " ")[[1]]
+total_casos <- str_extract_all(texto, "[[:digit:]]+")[[1]]
+total_casos <- as.integer(total_casos)
+
+```
+
+```{r}
+####### IMPORTANTE ##########
+add_obs = F
+horario <- as.character(Sys.time())
+hora <- str_split(horario, " ")[[1]][2]
+hora <- str_split(hora, ":")[[1]][1]
+if(as.integer(hora) == 12){
+  add_obs = T
+}
+
+att <- as.logical(add_obs == F)
+```
+
+
+```{r, eval = add_obs}
+atual = add_casos(cidades, total_casos)
+
+dat <-as.integer(paste0(dia, mes,"2020"))
+
+casos <- casos %>% 
+  add_row(Data = dmy(dat), 
+          Cidade = as.character(rmc$name_muni), 
+          Novos = calc_novos(atual, dia, mes), 
+          Total = atual)
+```
+
+
+```{r, eval = att}
+atual = add_casos(cidades, total_casos)
+
+t <- casos %>% filter(Data == dmy(as.integer(paste0(dia, mes, "2020")))) %>%  
+  select(Total)
+
+if(setequal(t$Total, atual) == F){
+  dat <-as.integer(paste0(dia, mes,"2020"))
+  casos <- casos %>% filter(Data != dmy(dat))
+  casos <- casos %>% 
+            add_row(Data = dmy(dat), 
+                    Cidade = as.character(rmc$name_muni), 
+                    Novos = calc_novos(atual, dia, mes), 
+                    Total = atual)
+} 
+
+```
+
+
+Column
+-----------------------------------------------------------------------
+
+### Chart A
+
+
+```{r}
+#Plotando
+#
+
+localizacao <- left_join(rmc, casos, by = c("name_muni" = "Cidade"))
+
+pal <- c("#ffffd8", "#f9f1a5", "#f9b025","#f98525", "#e76523", "#d44b05")
+
+ggplot(localizacao) +
+    geom_sf(aes(fill = Total)) +
+    labs(subtitle="RMC", size=8) +
+    scale_fill_gradientn(colors = pal, trans = "log1p", breaks = c(0, max(localizacao$Total))) +
+    theme_void() +
+    no_axis
+```
+
+Column
+-------------------------------------
+
+### Chart B
+
+```{r}
+casos %>% group_by(Cidade) %>% filter(Total != 0) %>% 
+  ggplot(aes(x = Data, y = Total, color = Cidade)) +
+  geom_line()+
+  geom_point() +
+  theme_linedraw()+
+  scale_y_continuous(breaks=seq(0, max(casos$Total), 1), 
+                     limits = c(0, max(casos$Total)),
+                     minor_breaks = seq(0, max(casos$Total), 1)) +
+  scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),  
+               date_breaks = "2 days",
+               date_labels = "%d/%m") +
+  theme(axis.title.x =element_blank(), 
+        axis.text.x = element_text(angle = 45, vjust = 0.5),
+        axis.title.y =element_blank(), 
+        )
+```
+
+```{r}
+write_csv(casos, path = "covid19_rmc.csv")
+```
+
