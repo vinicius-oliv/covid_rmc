@@ -2,6 +2,8 @@
 title: "Covid-19 RMC"
 output: 
   flexdashboard::flex_dashboard:
+    social: [ "twitter", "facebook", "linkedin", "pinterest" ]
+    css: styles.css
     orientation: columns
     vertical_layout: fill
 ---
