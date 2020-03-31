@@ -1,4 +1,5 @@
 name: "Covid19-RMC"
 output_dir: docs
-html_document:
- theme: cosmo
+output:
+  html_document:
+    theme: cosmo
