@@ -5,6 +5,7 @@ output:
     social: [ "twitter", "facebook", "linkedin"]
     orientation: columns
     vertical_layout: fill
+    theme: cosmo
 ---
 
 ```{r setup, include=FALSE}

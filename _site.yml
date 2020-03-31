@@ -1,11 +1,2 @@
 name: "Covid19-RMC"
 output_dir: docs
-navbar:
-  title: "Covid19-RMC"
-  left:
-    - text: "Gráficos"
-      href: index.html
-output:
-  html_document:
-    theme: cosmo
-    highlight: textmate    
