@@ -2,10 +2,10 @@
 title: "Covid-19 RMC"
 output: 
   flexdashboard::flex_dashboard:
+    theme: cosmo
     social: [ "twitter", "facebook", "linkedin"]
     orientation: columns
     vertical_layout: fill
-    theme: cosmo
 ---
 
 ```{r setup, include=FALSE}
