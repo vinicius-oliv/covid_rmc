@@ -1,3 +1,4 @@
-name: "my-website"
+name: "Covid19-RMC"
 output_dir: docs
-theme: cosmo
+html_document:
+ theme: cosmo
