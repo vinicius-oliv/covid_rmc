@@ -1,20 +1,20 @@
 ---
-title: "Covid-19 RMC"
+title: "Covid-19 na Região Metropolitana de Campinas"
 output: 
   flexdashboard::flex_dashboard:
     css: style.css
     social: menu    
     orientation: columns
-    vertical_layout: fill
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F, warning = F, message = F, results = "hide")
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
 
 library(flexdashboard)
-library(shiny)
 library(geobr)
+library(sf)
 library(tidyverse)
+library(plotly)
 library(rvest)
 library(httr)
 library(lubridate)
@@ -23,10 +23,11 @@ library(lubridate)
 ```{r}
 #Leitura do banco
 casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
+casos <- casos[1:300,]
 ```
 
 
-```{r, cache=T}
+```{r, cache=T, results = "hide"}
 #Shapefile Campinas
 rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
 
@@ -95,16 +96,18 @@ data <- as.character(Sys.Date())
 
 mes <- str_split(data, "-")[[1]][2]
 
-#Adiciono o zero na frente por padrão do link
-if(as.integer(mes) <= 9){
-  mes <- paste0("0", mes)
-}
 dia <- str_split(data, "-")[[1]][3]
+
+Dia = dia
+#Padrão(?) do primeiro dia do mês na url
+if(dia == "01"){
+  Dia = "1o"
+}
 
 Mes <- meses[as.integer(mes) - 2]
 
 #link da cobertura do G1 Campinas, por enquanto se mantém o padrão
-url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-",dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
+url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-", Dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
 
 texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
 
@@ -193,30 +196,32 @@ Column
 
 ```{r}
 #Plot dos casos por data
+k <- casos %>% group_by(Cidade) %>% filter(Total != 0)
 
-casos %>% group_by(Cidade) %>% filter(Total != 0) %>% 
-  ggplot(aes(x = Data, y = Total, color = Cidade)) +
-  geom_line()+
-  geom_point() +
-  theme_linedraw()+
-  scale_color_brewer(type = "qual", palette = "Set1") +
-  scale_y_continuous(breaks=seq(0, max(casos$Total), 2), 
+p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
+  geom_line() +
+  geom_point()+
+  theme_bw()+
+  scale_color_brewer(type = "qual", palette = "Paired") +
+  scale_y_continuous(breaks=seq(0, max(casos$Total), ceiling(max(casos$Total)/10)),
                      limits = c(0, max(casos$Total)),
-                     minor_breaks = seq(0, max(casos$Total), 1)) +
-  scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),  
+                     ) +
+  scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
                date_breaks = "2 days",
                date_labels = "%d/%m") +
-  labs(title = "Total de casos confirmados de Covid19", subtitle = "Dados: G1 Campinas",
+  labs(title = "Total de casos confirmados de Covid19", caption = "Dados: G1 Campinas",
        y = "Casos") +
-  theme(axis.title.x =element_blank(), 
-        axis.text.x = element_text(angle = 45, vjust = 0.5),
+  theme(axis.title.x =element_blank(),
+        axis.text.x = element_text(angle = 45, vjust = 0.5)
         )
+  
+ggplotly(p) %>% plotly::config(displayModeBar = F)
 ```
 
 Column
 -------------------------------------
 
-### Mapa dos casos por cidade
+### Mapeamento dos casos na RMC
 
 ```{r}
 #Mapa dos casos por cidade
@@ -227,9 +232,25 @@ pal <- c("#f6f2cb", "#f9b025","#f98525", "#e76523", "#d44b05")
 
 ultimos_casos <- localizacao %>% filter(Data == dmy(paste0(dia, mes, "2020")))
 
-ggplot(ultimos_casos, aes(text = name_muni)) +
+c <- st_centroid(ultimos_casos$geom)
+
+x = numeric(20)
+for(i in 1:length(c)){
+  x[i] <- as.numeric(c[[i]])[1]
+}
+
+y = numeric(20)
+for(i in 1:length(c)){
+  y[i] <- as.numeric(c[[i]])[2]
+}
+
+ultimos_casos <- ultimos_casos %>% mutate(X = x, Y = y)
+ultimos_casos$text <- with(ultimos_casos, paste0("Cidade: ", name_muni, "\nTotal: ", Total))
+
+m <- ggplot(ultimos_casos) +
     geom_sf(aes(fill = Total)) +
-    geom_sf_text(aes(label = name_muni), size = 2.5) +
+    geom_point(aes(x = X, y = Y, text = text), shape = 23, 
+               size = 2, fill = "yellow") +
     scale_fill_gradientn(limits = c(0, max(ultimos_casos$Total) + 15),
                          breaks = c(min(ultimos_casos$Total), max(ultimos_casos$Total)),
                          labels = c(as.character(min(ultimos_casos$Total)), 
@@ -240,6 +261,8 @@ ggplot(ultimos_casos, aes(text = name_muni)) +
     guides(fill = guide_colorbar(title = "Nº de casos")) +
     theme_void() +
     no_axis
+
+ggplotly(m, tooltip = "text") %>% layout(hoverlabel = list(font=list(family = "Times",size=18))) %>% plotly::config(displayModeBar = F)
 ```
 
 ```{r}
