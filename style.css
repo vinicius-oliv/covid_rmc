@@ -1,0 +1,13 @@
+.navbar-inverse {
+    background-color: #424242;
+    border-color: #424242;
+}
+
+.navbar-inverse .navbar-brand {
+    font-family: 'NimbusMon';
+    font-weight:  bold ;
+    color: #fffdfd;
+}
+
+
+
