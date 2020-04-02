@@ -191,7 +191,7 @@ if(att){
 Column
 -----------------------------------------------------------------------
 
-### Mapeamento dos casos na Região Metropolitana de Campinas
+### Total de casos na Região Metropolitana de Campinas
 
 ```{r}
 #Mapa dos casos por cidade
@@ -263,13 +263,15 @@ p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
   scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
                date_breaks = "2 days",
                date_labels = "%d/%m") +
-  labs(title = "Total de casos confirmados de Covid19", caption = "Dados: G1 Campinas",
+  labs(title = "Evolução por cidade",
        y = "Casos") +
+  guides(color = guide_legend(title = NULL)) +
   theme(axis.title.x =element_blank(),
-        axis.text.x = element_text(angle = 45, vjust = 0.5)
+        axis.text.x = element_text(angle = 45, vjust = 0.5),
+        legend.position="bottom"
         )
   
-ggplotly(p) %>% plotly::config(displayModeBar = F)
+ggplotly(p) %>% plotly::config(displayModeBar = F) %>% layout(legend=list(orientation = "h", x = 0, y = -0.2))
 ```
 
 ### Evolução (total)
