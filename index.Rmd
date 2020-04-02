@@ -1,9 +1,9 @@
 ---
-title: "Covid-19 na Região Metropolitana de Campinas"
+title: "Covid-19 na Região de Campinas"
 output: 
   flexdashboard::flex_dashboard:
     css: style.css
-    social: menu    
+    social: menu
     orientation: columns
 ---
 
@@ -23,7 +23,6 @@ library(lubridate)
 ```{r}
 #Leitura do banco
 casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
-casos <- casos[1:300,]
 ```
 
 
@@ -98,7 +97,7 @@ mes <- str_split(data, "-")[[1]][2]
 
 dia <- str_split(data, "-")[[1]][3]
 
-Dia = dia
+Dia = str_remove(dia, "0")
 #Padrão(?) do primeiro dia do mês na url
 if(dia == "01"){
   Dia = "1o"
@@ -138,16 +137,10 @@ total_casos <- as.integer(total_casos)
 
 ```{r}
 ####### CONF. DE ATUALIZACAO ##########
-#Meu app adiciona observações somente às 12h, após esse horário ele apenas atualiza
-#Não recomendo mudar para antes das 12h, pois a página do G1 sobe entre 9h ~ 11h
-add_obs = F
-horario <- as.character(Sys.time())
-hora <- str_split(horario, " ")[[1]][2]
-hora <- str_split(hora, ":")[[1]][1]
-if(as.integer(hora) == 12){
-  add_obs = T
-}
+#Se add_obs = T, então as observações referentes aquele dia serão adicionadas aos dados
+#Se add_obs = F, apenas irei atualizar as observações já criadas anteriormente
 
+add_obs = F
 att <- as.logical(add_obs == F)
 ```
 
@@ -192,34 +185,6 @@ if(att){
 
 Column
 -----------------------------------------------------------------------
-### Série temporal dos casos
-
-```{r}
-#Plot dos casos por data
-k <- casos %>% group_by(Cidade) %>% filter(Total != 0)
-
-p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
-  geom_line() +
-  geom_point()+
-  theme_bw()+
-  scale_color_brewer(type = "qual", palette = "Paired") +
-  scale_y_continuous(breaks=seq(0, max(casos$Total), ceiling(max(casos$Total)/10)),
-                     limits = c(0, max(casos$Total)),
-                     ) +
-  scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
-               date_breaks = "2 days",
-               date_labels = "%d/%m") +
-  labs(title = "Total de casos confirmados de Covid19", caption = "Dados: G1 Campinas",
-       y = "Casos") +
-  theme(axis.title.x =element_blank(),
-        axis.text.x = element_text(angle = 45, vjust = 0.5)
-        )
-  
-ggplotly(p) %>% plotly::config(displayModeBar = F)
-```
-
-Column
--------------------------------------
 
 ### Mapeamento dos casos na RMC
 
@@ -250,7 +215,7 @@ ultimos_casos$text <- with(ultimos_casos, paste0("Cidade: ", name_muni, "\nTotal
 m <- ggplot(ultimos_casos) +
     geom_sf(aes(fill = Total)) +
     geom_point(aes(x = X, y = Y, text = text), shape = 23, 
-               size = 2, fill = "yellow") +
+               size = 2, fill = "gray90") +
     scale_fill_gradientn(limits = c(0, max(ultimos_casos$Total) + 15),
                          breaks = c(min(ultimos_casos$Total), max(ultimos_casos$Total)),
                          labels = c(as.character(min(ultimos_casos$Total)), 
@@ -262,7 +227,72 @@ m <- ggplot(ultimos_casos) +
     theme_void() +
     no_axis
 
-ggplotly(m, tooltip = "text") %>% layout(hoverlabel = list(font=list(family = "Times",size=18))) %>% plotly::config(displayModeBar = F)
+ggplotly(m, tooltip = "text") %>% 
+  layout(hoverlabel = list(font=list(family = "Times",size=18)),
+         annotations = list(x = 1, y = 0, text = "Dados: G1 Campinas", 
+                       showarrow = F, xref='paper', yref='paper', 
+                       xanchor='right', yanchor='auto', xshift=0, yshift=0,
+                       font=list(size=15, color="black"))) %>% 
+  plotly::config(displayModeBar = F)
+```
+
+
+
+Column {.tabset}
+-------------------------------------
+
+### Evolução por cidade
+
+```{r}
+#Plot dos casos por data
+k <- casos %>% group_by(Cidade) %>% filter(Total != 0)
+
+p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
+  geom_line() +
+  geom_point()+
+  theme_bw()+
+  scale_color_brewer(type = "qual", palette = "Paired") +
+  scale_y_continuous(breaks=seq(0, max(casos$Total), ceiling(max(casos$Total)/10)),
+                     limits = c(0, max(casos$Total)),
+                     ) +
+  scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
+               date_breaks = "2 days",
+               date_labels = "%d/%m") +
+  labs(title = "Total de casos confirmados de Covid19", caption = "Dados: G1 Campinas",
+       y = "Casos") +
+  theme(axis.title.x =element_blank(),
+        axis.text.x = element_text(angle = 45, vjust = 0.5)
+        )
+  
+ggplotly(p) %>% plotly::config(displayModeBar = F)
+```
+
+### Evolução (total)
+
+```{r}
+#Plot dos casos por data
+
+totalData <- aggregate(k["Total"], by=k["Data"], sum)
+
+n<- ggplot(data = totalData, aes(x = Data, y = Total)) +
+  geom_line(colour = "darkred", size = 1.3) +
+  geom_area(fill = "tomato", alpha = .5) +
+  geom_point(colour = "darkred", size = 2)+
+  theme_bw() +
+  scale_color_brewer(type = "qual", palette = "Paired") +
+  scale_y_continuous(breaks=seq(0, max(totalData$Total), ceiling(max(totalData$Total)/10)),
+                     limits = c(0, max(totalData$Total)),
+                     ) +
+  scale_x_date(limit=c(dmy(13032020),totalData$Data[nrow(casos)] + 2),
+               date_breaks = "2 days",
+               date_labels = "%d/%m") +
+  labs(title = "Evolução dos casos na RMC",
+       y = "Casos") +
+  theme(axis.title.x =element_blank(),
+        axis.text.x = element_text(angle = 45, vjust = 0.5)
+        )
+  
+ggplotly(n) %>% plotly::config(displayModeBar = F)
 ```
 
 ```{r}

@@ -1,2 +1,7 @@
-name: "Covid19-RMC"
+name: "Covid-19 RMC"
 output_dir: docs
+navbar:
+  right:
+    - icon: fa-envelope
+      text: "Contato"
+      href: mailto:vinicius.n.o@outlook.com.br
