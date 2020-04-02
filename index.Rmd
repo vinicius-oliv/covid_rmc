@@ -1,12 +1,17 @@
 ---
-title: "Covid-19 na Região de Campinas"
+title: "Covid-19 R.M.Campinas"
 output: 
   flexdashboard::flex_dashboard:
     css: style.css
     social: menu
+    navbar:  
+      - {title: "Contato", icon: fa-envelope, href: mailto:vinicius.n.o@outlook.com.br }
+      - {icon: fa-github, href: https://github.com/vinicius-oliv/ }
     orientation: columns
+    includes:
+      after_body: footer.html
 ---
-
+  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, warning = F, message = F)
 
@@ -186,7 +191,7 @@ if(att){
 Column
 -----------------------------------------------------------------------
 
-### Mapeamento dos casos na RMC
+### Mapeamento dos casos na Região Metropolitana de Campinas
 
 ```{r}
 #Mapa dos casos por cidade
