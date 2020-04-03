@@ -144,8 +144,12 @@ total_casos <- as.integer(total_casos)
 ####### CONF. DE ATUALIZACAO ##########
 #Se add_obs = T, então as observações referentes aquele dia serão adicionadas aos dados
 #Se add_obs = F, apenas irei atualizar as observações já criadas anteriormente
+add_obs = T
 
-add_obs = F
+if(nrow(casos %>% filter(Data == dmy(paste0(dia, mes, "2020")))) > 0){
+  add_obs = F
+}
+
 att <- as.logical(add_obs == F)
 ```
 
