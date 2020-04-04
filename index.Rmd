@@ -23,6 +23,7 @@ library(plotly)
 library(rvest)
 library(httr)
 library(lubridate)
+library(tmap)
 ```
 
 ```{r}
@@ -115,6 +116,8 @@ url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/",
 
 texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
 
+cidades = character()
+
 for(i in 1:length(texto)){
 
   #Garantia de que estou na string contendo as cidades com os casos  
@@ -123,6 +126,22 @@ for(i in 1:length(texto)){
         cidades <- texto[i]
   }
   
+}
+
+if(length(cidades) == 0){
+  
+  #2a opçao de conteudo html onde o G1 armazazena info. (Caso o 1o falhe)
+  texto <- url %>% read_html() %>% html_nodes("ol.content-ordered-list") %>% html_text()
+
+    for(i in 1:length(texto)){
+    
+        #Garantia de que estou na string contendo as cidades com os casos  
+        if(str_detect(texto[i], "Campinas:|Campinas-") == T & 
+           str_detect(texto[i], "Valinhos:|Valinhos-") == T){
+              cidades <- texto[i]
+        }
+    
+    }
 }
 
 #Tratamento da string usando o pacote StringR
@@ -206,43 +225,13 @@ pal <- c("#f6f2cb", "#f9b025","#f98525", "#e76523", "#d44b05")
 
 ultimos_casos <- localizacao %>% filter(Data == dmy(paste0(dia, mes, "2020")))
 
-c <- st_centroid(ultimos_casos$geom)
+ultimos_casos <- ultimos_casos %>% select(name_muni, everything())
 
-x = numeric(20)
-for(i in 1:length(c)){
-  x[i] <- as.numeric(c[[i]])[1]
-}
+x = tm_shape(ultimos_casos) + tm_fill(col = "Total", style = "jenks", palette = pal, popup.vars = c("Casos: " = "Total")) + tm_borders(col = NA, lwd = 1.5, lty = "solid", alpha = NA, group = NA) + tm_layout(title = "Clique na cidade") + tm_text("name_muni", size = .8)
+tmap_mode("view") 
+x
 
-y = numeric(20)
-for(i in 1:length(c)){
-  y[i] <- as.numeric(c[[i]])[2]
-}
 
-ultimos_casos <- ultimos_casos %>% mutate(X = x, Y = y)
-ultimos_casos$text <- with(ultimos_casos, paste0("Cidade: ", name_muni, "\nTotal: ", Total))
-
-m <- ggplot(ultimos_casos) +
-    geom_sf(aes(fill = Total)) +
-    geom_point(aes(x = X, y = Y, text = text), shape = 23, 
-               size = 2, fill = "gray90") +
-    scale_fill_gradientn(limits = c(0, max(ultimos_casos$Total) + 15),
-                         breaks = c(min(ultimos_casos$Total), max(ultimos_casos$Total)),
-                         labels = c(as.character(min(ultimos_casos$Total)), 
-                                    as.character(max(ultimos_casos$Total))),
-                         colors = pal, trans = "sqrt",
-                         values = c(seq(0, 1, 0.1))) +
-    labs(title = "Casos confirmados por cidade", subtitle= "Região metropolitana de Campinas") +
-    guides(fill = guide_colorbar(title = "Nº de casos")) +
-    theme_void() +
-    no_axis
-
-ggplotly(m, tooltip = "text") %>% 
-  layout(hoverlabel = list(font=list(family = "Times",size=18)),
-         annotations = list(x = 1, y = 0, text = "Dados: G1 Campinas", 
-                       showarrow = F, xref='paper', yref='paper', 
-                       xanchor='right', yanchor='auto', xshift=0, yshift=0,
-                       font=list(size=15, color="black"))) %>% 
-  plotly::config(displayModeBar = F)
 ```
 
 
@@ -250,7 +239,7 @@ ggplotly(m, tooltip = "text") %>%
 Column {.tabset}
 -------------------------------------
 
-### Evolução por cidade
+### Série dos casos
 
 ```{r}
 #Plot dos casos por data
