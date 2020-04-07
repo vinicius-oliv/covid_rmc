@@ -239,7 +239,7 @@ x
 Column {.tabset}
 -------------------------------------
 
-### Série dos casos
+### Clique nos pontos para informações
 
 ```{r}
 #Plot dos casos por data
@@ -280,8 +280,8 @@ n<- ggplot(data = totalData, aes(x = Data, y = Total)) +
   geom_point(colour = "darkred", size = 2)+
   theme_bw() +
   scale_color_brewer(type = "qual", palette = "Paired") +
-  scale_y_continuous(breaks=seq(0, max(totalData$Total), ceiling(max(totalData$Total)/10)),
-                     limits = c(0, max(totalData$Total)),
+  scale_y_continuous(breaks=seq(0, max(totalData$Total) + ceiling(max(totalData$Total)/10), ceiling(max(totalData$Total)/10)),
+                     limits = c(0, max(totalData$Total) + ceiling(max(totalData$Total)/10)),
                      ) +
   scale_x_date(limit=c(dmy(13032020),totalData$Data[nrow(casos)] + 2),
                date_breaks = "2 days",
