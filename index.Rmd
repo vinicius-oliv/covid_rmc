@@ -105,8 +105,12 @@ dia <- str_split(data, "-")[[1]][3]
 
 Dia = dia
 #Padrão(?) do primeiro dia do mês na url
-if(dia == "01"){
+if(Dia == "01"){
   Dia = "1o"
+}
+
+if(as.integer(Dia)<10){
+  Dia = paste0("0",dia)
 }
 
 Mes <- meses[as.integer(mes) - 2]
