@@ -24,6 +24,7 @@ library(rvest)
 library(httr)
 library(lubridate)
 library(tmap)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -116,7 +117,9 @@ if(as.integer(Dia)<10){
 Mes <- meses[as.integer(mes) - 2]
 
 #link da cobertura do G1 Campinas, por enquanto se mantém o padrão
-url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-", Dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
+#url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-", Dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
+
+url <- "https://g1.globo.com/sp/campinas-regiao/noticia/2020/04/21/prefeituras-da-regiao-de-campinas-divulgam-atualizacao-de-novos-casos-de-covid-19-nesta-terca-21-de-abril.ghtml"
 
 texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
 
@@ -150,13 +153,8 @@ if(length(cidades) == 0){
 
 #Tratamento da string usando o pacote StringR
 casos_cidades <- cidades
-cidades <- str_remove_all(cidades, "-.?[[:digit:]]+")
-cidades <- str_split(cidades, pattern = " ")[[1]]
-
-if(cidades[1] != "Campinas"){
-  cidades <- str_remove_all(casos_cidades, "[[:digit:]]+")
-  cidades <- str_split(cidades, pattern = ": ")[[1]]
-}
+cidades <- str_remove_all(cidades, "[*-[:digit:]]")
+cidades <- str_split(cidades, pattern = ": ")[[1]]
 
 total_casos <- str_extract_all(casos_cidades, "[[:digit:]]+")[[1]]
 total_casos <- as.integer(total_casos)
@@ -249,11 +247,13 @@ Column {.tabset}
 #Plot dos casos por data
 k <- casos %>% group_by(Cidade) %>% filter(Total != 0)
 
+pal2 <- colorRampPalette(brewer.pal(12, "Paired"))
+
 p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
   geom_line() +
   geom_point()+
   theme_bw()+
-  scale_color_brewer(type = "qual", palette = "Paired") +
+  scale_colour_manual(values = pal2(20), name = "Cidades") +
   scale_y_continuous(breaks=seq(0, max(casos$Total), ceiling(max(casos$Total)/10)),
                      limits = c(0, max(casos$Total)),
                      ) +
@@ -262,7 +262,6 @@ p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
                date_labels = "%d/%m") +
   labs(title = "Evolução por cidade",
        y = "Casos") +
-  guides(color = guide_legend(title = NULL)) +
   theme(axis.title.x =element_blank(),
         axis.text.x = element_text(angle = 45, vjust = 0.5),
         legend.position="bottom"
