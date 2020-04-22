@@ -30,6 +30,7 @@ library(RColorBrewer)
 ```{r}
 #Leitura do banco
 casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
+casos <- casos[1:700, ]
 ```
 
 
@@ -100,9 +101,11 @@ calc_novos <- function(atual, dia, mes){
 ```{r}
 data <- as.character(Sys.Date())
 
-mes <- str_split(data, "-")[[1]][2]
+#mes <- str_split(data, "-")[[1]][2]
 
-dia <- str_split(data, "-")[[1]][3]
+#dia <- str_split(data, "-")[[1]][3]
+mes <- "04"
+dia <- "21"
 
 Dia = dia
 #Padrão(?) do primeiro dia do mês na url
@@ -300,6 +303,7 @@ ggplotly(n) %>% plotly::config(displayModeBar = F)
 
 ```{r}
 #Atualizo meu banco de dados
+
 write_csv(casos, path = "covid19_rmc.csv")
 ```
 
