@@ -100,11 +100,8 @@ calc_novos <- function(atual, dia, mes){
 ```{r}
 data <- as.character(Sys.Date())
 
-#mes <- str_split(data, "-")[[1]][2]
-#dia <- str_split(data, "-")[[1]][3]
-
-mes <- "04"
-dia <- "22"
+mes <- str_split(data, "-")[[1]][2]
+dia <- str_split(data, "-")[[1]][3]
 
 Dia = dia
 #Padrão(?) do primeiro dia do mês na url
@@ -118,8 +115,14 @@ if(as.integer(Dia)<10){
 
 Mes <- meses[as.integer(mes) - 2]
 
+d <- dmy(paste0(dia, mes,"2020"))
+
+dia_ext = c("domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado")
+
+dia_ext <- dia_ext[wday(d)]
+
 #link da cobertura do G1 Campinas, por enquanto se mantém o padrão
-url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia, "/coronavirus-prefeituras-da-regiao-de-campinas-divulgam-atualizacao-de-novos-casos-nesta-quarta-",Dia,"-de-",Mes,".ghtml")
+url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia, "/coronavirus-prefeituras-da-regiao-de-campinas-atualizam-novos-casos-nesta-",dia_ext,"-",Dia,"-de-",Mes,".ghtml")
 
 #url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia,                  "/ultimas-noticias-de-coronavirus-de-", Dia, "-de-", Mes,                                        "-na-regiao-de-campinas.ghtml")
 
