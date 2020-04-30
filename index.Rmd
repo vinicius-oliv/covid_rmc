@@ -100,8 +100,10 @@ calc_novos <- function(atual, dia, mes){
 ```{r}
 data <- as.character(Sys.Date())
 
-mes <- str_split(data, "-")[[1]][2]
-dia <- str_split(data, "-")[[1]][3]
+#mes <- str_split(data, "-")[[1]][2]
+#dia <- str_split(data, "-")[[1]][3]
+mes <- "04"
+dia <- "29"
 
 Dia = dia
 #Padrão(?) do primeiro dia do mês na url
