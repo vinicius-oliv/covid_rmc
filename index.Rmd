@@ -130,7 +130,9 @@ if(wday(d) %in% c(1, 7)){
 
 
 #link da cobertura do G1 Campinas, por enquanto se mantém o padrão
-url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia, "/coronavirus-prefeituras-da-regiao-de-campinas-confirmam-novos-casos-", nest ,"-",dia_ext,"-",Dia,"-de-",Mes,".ghtml")
+#url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia, "/coronavirus-prefeituras-da-regiao-de-campinas-confirmam-novos-casos-", nest ,"-",dia_ext,"-",Dia,"-de-",Mes,".ghtml")
+
+url <- "https://g1.globo.com/sp/campinas-regiao/noticia/2020/05/06/coronavirus-prefeituras-da-regiao-de-campinas-confirmam-novos-casos-nesta-terca-5-de-maio.ghtml"
 
 texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
 
