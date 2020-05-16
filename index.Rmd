@@ -66,9 +66,6 @@ calc_total <- function(novo){
   return(novo + casos$Total[(nrow(casos) - 19): nrow(casos)])
 }
 
-#
-meses <- c("marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
-
 #Cálculo para os novos casos (dia X(i + 1) - dia X(i))
 calc_novos <- function(atual, dia, mes){
     dia_ant = as.integer(dia) - 1
@@ -102,44 +99,38 @@ data <- as.character(Sys.Date())
 mes <- str_split(data, "-")[[1]][2]
 dia <- str_split(data, "-")[[1]][3]
 
-Dia = dia
+#
+meses <- c("marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
 
-#Padrão(?) do primeiro dia do mês na url
-if(Dia == "01"){
-  Dia <- "1o"
+if(dia == "01"){
+  dia <- "1o"
 }
 
-if(as.numeric(Dia) < 10){
-  Dia <- as.character(as.numeric(Dia))
-}
 
 Mes <- meses[as.integer(mes) - 2]
 
-d <- dmy(paste0(dia, mes,"2020"))
+url <- paste0("https://www.google.com/search?q=coronavirus+", dia, "+de+", Mes, "+campinas")
 
-dia_ext = c("domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado")
+links <- url %>% read_html() %>% html_nodes("a") %>% xml_attr("href")
 
-dia_ext <- dia_ext[wday(d)]
-
-nest <- "nesta"
-
-if(wday(d) %in% c(1, 7)){
-  nest <- "neste"
+for(i in 1:length(links)){
+  if(str_detect(links[i], "g1") & str_detect(links[i], "prefeituras")){
+    g1campinas <- links[i]
+    break
+  }
 }
 
+g1campinas <- str_replace(g1campinas, "html.*", "html") %>% str_replace(".*(https)", "https")
 
-#link da cobertura do G1 Campinas, por enquanto se mantém o padrão
-url <- paste0("https://g1.globo.com/sp/campinas-regiao/noticia/2020/", mes, "/", dia, "/coronavirus-prefeituras-da-regiao-de-campinas-confirmam-novos-casos-", nest ,"-",dia_ext,"-",Dia,"-de-",Mes,".ghtml")
-
-texto <- url %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
+texto <- g1campinas %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
 
 cidades = character()
 
 for(i in 1:length(texto)){
 
   #Garantia de que estou na string contendo as cidades com os casos  
-  if(str_detect(texto[i], "Campinas:|Campinas-") == T & 
-     str_detect(texto[i], "Valinhos:|Valinhos-") == T){
+  if(str_detect(texto[i], "Campinas:|Campinas-")& 
+     str_detect(texto[i], "Valinhos:|Valinhos-")){
         cidades <- texto[i]
   }
   
@@ -153,22 +144,19 @@ if(length(cidades) == 0){
     for(i in 1:length(texto)){
     
         #Garantia de que estou na string contendo as cidades com os casos  
-        if(str_detect(texto[i], "Campinas:|Campinas-") == T & 
-           str_detect(texto[i], "Valinhos:|Valinhos-") == T){
+        if(str_detect(texto[i], "Campinas:|Campinas-") & 
+           str_detect(texto[i], "Valinhos:|Valinhos-")){
               cidades <- texto[i]
         }
     
     }
 }
-
 #Tratamento da string usando o pacote StringR
 casos_cidades <- cidades
 cidades <- str_remove_all(cidades, "[*-[:digit:]]")
 cidades <- str_split(cidades, pattern = ": ")[[1]]
-
 total_casos <- str_extract_all(casos_cidades, "[[:digit:]]+")[[1]]
 total_casos <- as.integer(total_casos)
-
 ```
 
 ```{r}
@@ -242,8 +230,6 @@ ultimos_casos <- ultimos_casos %>% select(name_muni, everything())
 x = tm_shape(ultimos_casos) + tm_fill(col = "Total", style = "jenks", palette = pal, popup.vars = c("Casos: " = "Total")) + tm_borders(col = NA, lwd = 1.5, lty = "solid", alpha = NA, group = NA) + tm_layout(title = "Clique na cidade") + tm_text("name_muni", size = .8)
 tmap_mode("view") 
 x
-
-
 ```
 
 
@@ -255,16 +241,15 @@ Column {.tabset}
 
 ```{r}
 #Plot dos casos por data
-k <- casos %>% group_by(Cidade) %>% filter(Total != 0)
-
 pal2 <- colorRampPalette(brewer.pal(12, "Paired"))
 
-p<- ggplot(data = k, aes(x = Data, y = Total, color = Cidade)) +
+p<- casos %>% group_by(Cidade) %>% filter(Total != 0) %>% 
+  ggplot(aes(x = Data, y = Total, color = Cidade)) +
   geom_line() +
   geom_point()+
   theme_bw()+
   scale_colour_manual(values = pal2(20), name = "Cidades") +
-  scale_y_continuous(breaks=seq(0, max(casos$Total) + 30, 30),
+  scale_y_continuous(breaks=seq(0, max(casos$Total) + 30, 50),
                      limits = c(0, max(casos$Total) + 15),
                      ) +
   scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
@@ -285,15 +270,14 @@ ggplotly(p) %>% plotly::config(displayModeBar = F) %>% layout(legend=list(orient
 ```{r}
 #Plot dos casos por data
 
-totalData <- aggregate(k["Total"], by=k["Data"], sum)
+totalData <- aggregate(casos["Total"], by=casos["Data"], sum)
 
 n<- ggplot(data = totalData, aes(x = Data, y = Total)) +
   geom_line(colour = "darkred", size = 1.3) +
   geom_area(fill = "tomato", alpha = .5) +
-  geom_point(colour = "darkred", size = 2)+
   theme_bw() +
   scale_color_brewer(type = "qual", palette = "Paired") +
-  scale_y_continuous(breaks=seq(0, max(totalData$Total) + ceiling(max(totalData$Total)/10), 50),
+  scale_y_continuous(breaks=seq(0, max(totalData$Total) + ceiling(max(totalData$Total)/10), 200),
                      limits = c(0, max(totalData$Total) + ceiling(max(totalData$Total)/10)),
                      ) +
   scale_x_date(limit=c(dmy(13032020),totalData$Data[nrow(casos)] + 2),
