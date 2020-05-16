@@ -129,8 +129,8 @@ cidades = character()
 for(i in 1:length(texto)){
 
   #Garantia de que estou na string contendo as cidades com os casos  
-  if(str_detect(texto[i], "Campinas:|Campinas-")& 
-     str_detect(texto[i], "Valinhos:|Valinhos-")){
+  if(str_detect(texto[i], "Campinas:|Campinas-") == T & 
+     str_detect(texto[i], "Valinhos:|Valinhos-") == T){
         cidades <- texto[i]
   }
   
@@ -139,13 +139,13 @@ for(i in 1:length(texto)){
 if(length(cidades) == 0){
   
   #2a opçao de conteudo html onde o G1 armazazena info. (Caso o 1o falhe)
-  texto <- url %>% read_html() %>% html_nodes("ol.content-ordered-list") %>% html_text()
+  texto <- g1campinas %>% read_html() %>% html_nodes("ol.content-ordered-list") %>% html_text()
 
     for(i in 1:length(texto)){
     
         #Garantia de que estou na string contendo as cidades com os casos  
-        if(str_detect(texto[i], "Campinas:|Campinas-") & 
-           str_detect(texto[i], "Valinhos:|Valinhos-")){
+        if(str_detect(texto[i], "Campinas:|Campinas-") == T & 
+           str_detect(texto[i], "Valinhos:|Valinhos-") == T){
               cidades <- texto[i]
         }
     
