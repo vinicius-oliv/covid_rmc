@@ -221,13 +221,13 @@ Column
 
 localizacao <- left_join(rmc, casos, by = c("name_muni" = "Cidade"))
 
-pal <- c("#f6f2cb", "#f9b025","#f98525", "#e76523", "#d44b05")
+pal <- c("#f4e79a", "#f9b025","#f98525", "#e76523", "#d44b05")
 
 ultimos_casos <- localizacao %>% filter(Data == dmy(paste0(dia, mes, "2020")))
 
 ultimos_casos <- ultimos_casos %>% select(name_muni, everything())
 
-x = tm_shape(ultimos_casos) + tm_fill(col = "Total", style = "jenks", palette = pal, popup.vars = c("Casos: " = "Total")) + tm_borders(col = NA, lwd = 1.5, lty = "solid", alpha = NA, group = NA) + tm_layout(title = "Clique na cidade") + tm_text("name_muni", size = .8)
+x = tm_shape(ultimos_casos) + tm_fill(col = "Total", style = "jenks", palette = pal, popup.vars = c("Casos: " = "Total")) + tm_borders(col = NA, lwd = 1.5, lty = "solid", alpha = NA, group = NA) + tm_text("name_muni", size = .8) + tm_layout(title = c("Fonte: G1 Campinas"))
 tmap_mode("view") 
 x
 ```
@@ -253,7 +253,7 @@ p<- casos %>% group_by(Cidade) %>% filter(Total != 0) %>%
                      limits = c(0, max(casos$Total) + 15),
                      ) +
   scale_x_date(limit=c(dmy(13032020),casos$Data[nrow(casos)] + 2),
-               date_breaks = "3 days",
+               date_breaks = "5 days",
                date_labels = "%d/%m") +
   labs(title = "Evolução por cidade",
        y = "Casos") +
@@ -281,7 +281,7 @@ n<- ggplot(data = totalData, aes(x = Data, y = Total)) +
                      limits = c(0, max(totalData$Total) + ceiling(max(totalData$Total)/10)),
                      ) +
   scale_x_date(limit=c(dmy(13032020),totalData$Data[nrow(casos)] + 2),
-               date_breaks = "3 days",
+               date_breaks = "5 days",
                date_labels = "%d/%m") +
   labs(title = "Evolução dos casos na RMC",
        y = "Casos") +
