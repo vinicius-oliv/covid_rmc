@@ -153,10 +153,11 @@ if(length(cidades) == 0){
 }
 #Tratamento da string usando o pacote StringR
 casos_cidades <- cidades
-cidades <- str_remove_all(cidades, "[*-[:digit:]]")
+cidades <- str_remove_all(cidades, "[*?.[:digit:]]")
 cidades <- str_split(cidades, pattern = ": ")[[1]]
-total_casos <- str_extract_all(casos_cidades, "[[:digit:]]+")[[1]]
-total_casos <- as.integer(total_casos)
+total_casos <- str_replace(casos_cidades, pattern = "\\.", "")
+total_casos <- str_extract_all(total_casos, "[[:digit:]]+")
+total_casos <- as.integer(total_casos[[1]])
 ```
 
 ```{r}
