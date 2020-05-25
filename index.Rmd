@@ -35,7 +35,7 @@ casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
 
 ```{r, cache=T, results = "hide"}
 #Shapefile Campinas
-rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
+#rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
 
 #
 no_axis <- theme(axis.title=element_blank(),
@@ -109,7 +109,7 @@ if(dia == "01"){
 
 Mes <- meses[as.integer(mes) - 2]
 
-url <- paste0("https://www.google.com/search?q=coronavirus+", dia, "+de+", Mes, "+campinas")
+url <- paste0("https://www.google.com/search?q=coronavirus+prefeituras+da+regiao+de+campinas+", dia, "+de+", Mes, "+campinas")
 
 links <- url %>% read_html() %>% html_nodes("a") %>% xml_attr("href")
 
