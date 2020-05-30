@@ -296,5 +296,10 @@ ggplotly(n) %>% plotly::config(displayModeBar = F)
 ```{r}
 #Atualizo meu banco de dados
 write_csv(casos, path = "covid19_rmc.csv")
+
+#Renderizando o site
+
+#Git
+source("/home/vinicius/Documentos/Projetos/GitHub.R")
 ```
 
