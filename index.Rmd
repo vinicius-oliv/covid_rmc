@@ -41,8 +41,8 @@ rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
 no_axis <- theme(axis.title=element_blank(),
                  axis.text=element_blank(),
                  axis.ticks=element_blank())
-```
-```{r}
+
+
 #Função para adicionar casos no dia
 add_casos <- function(cidades, quant){
   quant <- as.vector(quant)
@@ -69,22 +69,27 @@ calc_total <- function(novo){
 #Cálculo para os novos casos (dia X(i + 1) - dia X(i))
 calc_novos <- function(atual, dia, mes){
     dia_ant = as.integer(dia) - 1
+    
+#Vejo se o dia anterior foi neste mesmo mês ou não
     mes <- ifelse(dia_ant == 0, 
                   as.integer(mes) - 1, 
                   as.integer(mes)
                   )
-    
+
+#Se o mês for menor do que 10 eu tenho que adicionar um zero na frente para futuramente o lubridate entendê-lo     
     if(mes < 10){
       mes = paste0("0", mes)
     }
     
-    if(dia_ant == 0 & as.integer(mes) %in% c(1, 3, 5, 6, 8, 10)){
+#Vejo se estou num mês de 31 dias ou não
+    if(dia_ant == 0 & as.integer(mes) %in% c(1, 3, 5, 7, 8, 10, 12)){
       dia_ant = "31"
     }else if(dia_ant == 0){
       dia_ant = "30"
     }else{
     }
-  
+
+#Calculo os novos casos  
     ant <- casos %>% 
                filter(Data == dmy(as.integer(paste0(dia_ant, mes, "2020"))))
     
@@ -94,23 +99,22 @@ calc_novos <- function(atual, dia, mes){
 
 
 ```{r}
+##Web-scraping
+
 data <- as.character(Sys.Date())
 
 mes <- str_split(data, "-")[[1]][2]
 dia <- str_split(data, "-")[[1]][3]
 
-#
 meses <- c("marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
 
-if(dia == "01"){
-  dia <- "1o"
-}
-
-
+#Seleciono o mês por extenso para a minha busca no google
 Mes <- meses[as.integer(mes) - 2]
 
+#Busco no google usando o título padrão de cobertura do G1 Campinas
 url <- paste0("https://www.google.com/search?q=coronavirus+prefeituras+da+regiao+de+campinas+", dia, "+de+", Mes, "+campinas")
 
+#Seleciono o resultado correto
 links <- url %>% read_html() %>% html_nodes("a") %>% xml_attr("href")
 
 for(i in 1:length(links)){
@@ -120,6 +124,7 @@ for(i in 1:length(links)){
   }
 }
 
+#Abro o link do resultado e extraio a tabela de casos
 g1campinas <- str_replace(g1campinas, "html.*", "html") %>% str_replace(".*(https)", "https")
 
 texto <- g1campinas %>% read_html() %>% html_nodes("ul.content-unordered-list") %>% html_text()
@@ -161,7 +166,6 @@ total_casos <- as.integer(total_casos[[1]])
 ```
 
 ```{r}
-####### CONF. DE ATUALIZACAO ##########
 #Se add_obs = T, então as observações referentes aquele dia serão adicionadas aos dados
 #Se add_obs = F, apenas irei atualizar as observações já criadas anteriormente
 add_obs = T
