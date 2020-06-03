@@ -1,5 +1,5 @@
 # Covid-19 na Região Metropolitana de Campinas
-Dashboard em: https://covid-rmc.netlify.com/
+Site em: https://covid-rmc.netlify.com/
 
 Projeto de coleta dos casos confirmados de covid-19 na Região Metropolitana de Campinas.
 - Atualizado diariamente.
