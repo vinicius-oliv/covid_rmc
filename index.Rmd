@@ -6,7 +6,7 @@ output:
     social: menu
     navbar:  
       - {title: "Contato", icon: fa-envelope, href: mailto:vinicius.n.o@outlook.com.br }
-      - {title: "Github", icon: fa-github, href: https://github.com/vinicius-oliv/ }
+      - {title: "Github", icon: fa-github, href: https://github.com/vinicius-oliv/}
     orientation: columns
     includes:
       after_body: footer.html
@@ -35,7 +35,7 @@ casos <- read_csv(file = "covid19_rmc.csv", col_names = T)
 
 ```{r, cache=T, results = "hide"}
 #Shapefile Campinas
-rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
+#rmc <- read_metro_area(2018) %>% filter(name_metro == "RM Campinas")
 
 #
 no_axis <- theme(axis.title=element_blank(),
@@ -112,16 +112,20 @@ meses <- c("marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "ou
 Mes <- meses[as.integer(mes) - 2]
 
 #Busco no google usando o título padrão de cobertura do G1 Campinas
-url <- paste0("https://www.google.com/search?q=coronavirus+prefeituras+da+regiao+de+campinas+", dia, "+de+", Mes, "+campinas")
+url <- paste0("https://www.google.com/search?q=coronavirus+prefeituras+da+regiao+de+campinas+", dia, "+de+", Mes)
 
 #Seleciono o resultado correto
 links <- url %>% read_html() %>% html_nodes("a") %>% xml_attr("href")
 
+#Garanto que estou na seção e data correta.
 for(i in 1:length(links)){
-  if(str_detect(links[i], "g1") & str_detect(links[i], "prefeituras")){
-    g1campinas <- links[i]
-    break
-  }
+  if(str_detect(links[i], "g1") & 
+     str_detect(links[i], "prefeituras") & 
+     str_detect(g1campinas, dia))
+    {
+      g1campinas <- links[i]
+      break
+    }
 }
 
 #Abro o link do resultado e extraio a tabela de casos
