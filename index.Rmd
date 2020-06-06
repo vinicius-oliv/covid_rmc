@@ -121,7 +121,7 @@ links <- url %>% read_html() %>% html_nodes("a") %>% xml_attr("href")
 for(i in 1:length(links)){
   if(str_detect(links[i], "g1") & 
      str_detect(links[i], "prefeituras") & 
-     str_detect(g1campinas, dia))
+     str_detect(links[i], dia))
     {
       g1campinas <- links[i]
       break
