@@ -255,7 +255,7 @@ pal2 <- colorRampPalette(brewer.pal(12, "Paired"))
 p<- casos %>% group_by(Cidade) %>% filter(Total != 0) %>% 
   ggplot(aes(x = Data, y = log(Total), color = Cidade)) +
   geom_line(size = 1.2) +
-  geom_point(aes(x = Data, y = log(Total), text = paste("Casos:", Total)), size = 0.1) +
+  geom_point(aes(text = paste("Casos:", Total)), size = 0.1) +
   theme_bw()+
   scale_colour_manual(values = pal2(20), name = "Cidades") +
   scale_y_continuous(breaks=seq(0, log(max(casos$Total)) + 1, 1),
@@ -271,7 +271,7 @@ p<- casos %>% group_by(Cidade) %>% filter(Total != 0) %>%
         legend.position="bottom"
         )
   
-ggplotly(p, tooltip = c("x", "text")) %>% 
+ggplotly(p, tooltip = c("text", "x")) %>% 
   plotly::config(displayModeBar = F) %>% 
   layout(legend=list(orientation = "h", x = 0, y = -0.2), 
          annotations = list(list(x = 0 , y = 1.085, text = "(Dois cliques no nome da cidade p/ isolar)", 
